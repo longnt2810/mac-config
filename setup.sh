@@ -176,14 +176,30 @@ fi
 
 # 11. Set up Git with basic configuration
 echo "Configuring Git..."
-git config --global user.name "Long Nguyen"
-git config --global user.email "long.nguyen@eastgate-software.com"
+
+# Prompt for Git user information
+echo "Please enter your Git configuration:"
+read -p "Enter your full name: " git_name
+read -p "Enter your email address: " git_email
+
+# Validate input
+if [ -z "$git_name" ] || [ -z "$git_email" ]; then
+  echo "Error: Name and email are required for Git configuration."
+  exit 1
+fi
+
+git config --global user.name "$git_name"
+git config --global user.email "$git_email"
 git config --global core.editor "code --wait"
+
+echo "Git configured with:"
+echo "  Name: $git_name"
+echo "  Email: $git_email"
 
 # 12. Set up SSH for GitHub
 echo "Setting up SSH for GitHub..."
 if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
-  ssh-keygen -t ed25519 -C "long.nguyen@eastgate-software.com" -f ~/.ssh/id_ed25519 -N ""
+  ssh-keygen -t ed25519 -C "$git_email" -f ~/.ssh/id_ed25519 -N ""
   eval "$(ssh-agent -s)"
   ssh-add ~/.ssh/id_ed25519
   echo "Host github.com
