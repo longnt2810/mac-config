@@ -101,7 +101,84 @@ defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 # Show battery percentage in menu bar
 defaults write com.apple.menuextra.battery ShowPercent -string "YES"
 
-# 7. Configure Dock
+# 7. Remove pre-installed applications
+echo "Removing pre-installed applications..."
+
+# Function to safely remove applications
+remove_app() {
+  app_name=$1
+  app_path="/Applications/$app_name.app"
+  
+  if [ -d "$app_path" ]; then
+    echo "Removing $app_name..."
+    # Check if we can use sudo to remove the app
+    if sudo rm -rf "$app_path" 2>/dev/null; then
+      echo "$app_name removed successfully."
+    else
+      echo "Could not remove $app_name. It may be protected by System Integrity Protection."
+      echo "Attempting to hide $app_name instead..."
+      # If we can't remove it, try to hide it
+      sudo chflags hidden "$app_path" 2>/dev/null
+      if [ $? -eq 0 ]; then
+        echo "$app_name hidden successfully."
+      else
+        echo "Could not hide $app_name. It will remain visible in Applications folder."
+      fi
+    fi
+  else
+    echo "$app_name not found or already removed."
+  fi
+}
+
+# Ask user which apps to remove
+echo "The following pre-installed applications can be removed:"
+echo "1. GarageBand (music creation studio)"
+echo "2. iMovie (video editing software)"
+echo "3. Keynote (presentation software)"
+echo "4. Numbers (spreadsheet software)"
+echo "5. Pages (word processing software)"
+echo "6. Chess (game)"
+echo "7. All of the above"
+echo "8. None (skip)"
+
+read -p "Enter your choice (1-8): " app_choice
+
+case $app_choice in
+  1)
+    remove_app "GarageBand"
+    ;;
+  2)
+    remove_app "iMovie"
+    ;;
+  3)
+    remove_app "Keynote"
+    ;;
+  4)
+    remove_app "Numbers"
+    ;;
+  5)
+    remove_app "Pages"
+    ;;
+  6)
+    remove_app "Chess"
+    ;;
+  7)
+    remove_app "GarageBand"
+    remove_app "iMovie"
+    remove_app "Keynote"
+    remove_app "Numbers"
+    remove_app "Pages"
+    remove_app "Chess"
+    ;;
+  8)
+    echo "Skipping application removal."
+    ;;
+  *)
+    echo "Invalid choice. Skipping application removal."
+    ;;
+esac
+
+# 8. Configure Dock
 echo "Configuring Dock..."
 # Disable Recent Applications in Dock
 defaults write com.apple.dock show-recents -bool false
@@ -118,7 +195,7 @@ defaults write com.apple.dock persistent-apps -array \
 # Restart Dock to apply changes
 killall Dock
 
-# 8. Install Oh My Zsh for enhanced terminal experience
+# 9. Install Oh My Zsh for enhanced terminal experience
 echo "Installing Oh My Zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -126,7 +203,7 @@ else
   echo "Oh My Zsh already installed."
 fi
 
-# 9. Install Powerlevel10k for Oh My Zsh
+# 10. Install Powerlevel10k for Oh My Zsh
 echo "Installing Powerlevel10k theme..."
 if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
@@ -136,7 +213,7 @@ else
   echo "Powerlevel10k already installed."
 fi
 
-# 10. Install Oh My Zsh Plugins
+# 11. Install Oh My Zsh Plugins
 echo "Installing Oh My Zsh plugins..."
 ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
 
@@ -174,7 +251,7 @@ if ! grep -q "zsh-completions" ~/.zshrc; then
   fi
 fi
 
-# 11. Set up Git with basic configuration
+# 12. Set up Git with basic configuration
 echo "Configuring Git..."
 
 # Prompt for Git user information
@@ -196,7 +273,7 @@ echo "Git configured with:"
 echo "  Name: $git_name"
 echo "  Email: $git_email"
 
-# 12. Set up SSH for GitHub
+# 13. Set up SSH for GitHub
 echo "Setting up SSH for GitHub..."
 if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
   ssh-keygen -t ed25519 -C "$git_email" -f ~/.ssh/id_ed25519 -N ""
@@ -211,7 +288,7 @@ else
   echo "SSH key already exists."
 fi
 
-# 13. Set up NVM (Node Version Manager)
+# 14. Set up NVM (Node Version Manager)
 echo "Configuring NVM..."
 mkdir -p ~/.nvm
 export NVM_DIR="$HOME/.nvm"
@@ -220,7 +297,7 @@ echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.zshrc
 echo '[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"' >> ~/.zshrc
 echo '[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"' >> ~/.zshrc
 
-# 14. Set up Miniconda
+# 15. Set up Miniconda
 echo "Configuring Miniconda..."
 if [ -d "$HOME/miniconda3" ]; then
   echo "Initializing Miniconda..."
@@ -229,7 +306,7 @@ else
   echo "Miniconda directory not found. Please ensure Miniconda is installed correctly."
 fi
 
-# 15. Reload zsh configuration
+# 16. Reload zsh configuration
 echo "Reloading zsh configuration..."
 source ~/.zshrc
 
